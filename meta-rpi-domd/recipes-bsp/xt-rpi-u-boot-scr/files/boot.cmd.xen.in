@@ -1,0 +1,20 @@
+setenv xen_addr_r 0x02700000
+
+fatload mmc 0 ${kernel_addr_r} Image
+
+fdt addr ${fdt_addr} 0x40000
+fdt resize
+fdt chosen
+
+fdt set /chosen \#address-cells <1>
+fdt set /chosen \#size-cells <1>
+
+fdt mknod /chosen module@0
+fdt set /chosen/module@0 compatible "xen,linux-zimage" "xen,multiboot-module"
+fdt set /chosen/module@0 reg <${kernel_addr_r} 0x${filesize} >
+fdt set /chosen/module@0 bootargs "reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe snd_bcm2835.enable_compat_alsa=0 snd_bcm2835.enable_hdmi=1  smsc95xx.macaddr=2C:CF:67:32:84:23 vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  console=ttyAMA10,115200 console=tty1 root=PARTUUID=1c507a66-02 rootfstype=ext4 fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-console"
+
+fdt print /chosen
+
+fatload mmc 0 ${xen_addr_r} xen
+booti ${xen_addr_r} - ${fdt_addr}
