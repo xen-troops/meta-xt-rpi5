@@ -1,0 +1,24 @@
+// SPDX-License-Identifier: GPL-2.0
+#include "arm/broadcom/bcm2712-rpi-5-b.dts"
+
+/ {
+	chosen {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		xen,dom0-bootargs = "rw rootwait console=hvc0 clk_ignore_unused earlycon=xenboot debug root=/dev/mmcblk0p2";
+		bootargs = "dom0_mem=128M console=dtuart dtuart=/soc/serial@7d001000";
+		/delete-property/stdout-path;
+		modules {
+			module@1 {
+				compatible = "xen,linux-zimage", "xen,multiboot-module";
+				reg = <0x00080000 0x1a48200>;
+			};
+			module@2 {
+				compatible = "xen,xsm-policy", "xen,multiboot-module";
+				reg = <0x8c000000 0x10000>;
+			};
+		};
+	};
+};
+/delete-node/ &_uart2;
+/delete-node/ &_uart5;
