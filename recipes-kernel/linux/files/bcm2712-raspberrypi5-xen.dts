@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: GPL-2.0
+#include "arm/broadcom/bcm2712-rpi-5-b.dts"
+
+/ {
+	chosen {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		//xen,dom0-bootargs = "rw rootwait console=hvc0 clk_ignore_unused earlycon=xenboot debug root=/dev/mmcblk0p2";
+		xen,dom0-bootargs = "rw console=hvc0 clk_ignore_unused earlycon=xenboot debug root=/dev/ram0";
+		bootargs = "dom0_mem=256M console=dtuart dtuart=/soc/serial@7d001000";
+		/delete-property/stdout-path;
+		modules {
+			module@1 {
+				compatible = "xen,linux-zimage", "xen,multiboot-module";
+				reg = <0x00080000 0x1a48200>;
+			};
+			module@2 {
+				compatible = "xen,xsm-policy", "xen,multiboot-module";
+				reg = <0x8c000000 0x10000>;
+			};
+		};
+	};
+};
+
+/* ============================ Xen pass through section =====================*/
+&gio_aon {
+	xen,passthrough;
+	xen,path = "/soc/gpio@7d517c00";
+	xen,force-assign-without-iommu = <0x1>;
+	xen,reg = <0x10 0x7d517000 0x0 0x1000 0x10 0x7d517000>;
+};
+
+&sdio1 {
+	xen,passthrough;
+	xen,path = "/axi/mmc@fff000";
+	xen,force-assign-without-iommu = <0x1>;
+	xen,reg = <0x10 0xfff000 0x0 0x1000  0x10 0xfff000
+		   0x10 0x1504000 0x0 0x1000 0x10 0x1504000
+		   0x10 0x1520000 0x0 0x1000 0x10 0x1520000>;
+};
+
+&sd_io_1v8_reg {
+	xen,passthrough;
+	extracted,path = "/sd_io_1v8_reg";
+};
+
+&sd_vcc_reg {
+	xen,passthrough;
+	extracted,path = "/sd_vcc_reg";
+};
+
+&clk_emmc2 {
+	xen,passthrough;
+	extracted,path = "/sd_vcc_reg";
+	extracted,path = "/clocks/clk_emmc2";
+};
+
+&_uart2             { xen,passthrough; };
+&_uart5             { xen,passthrough; };
+//&pinctrl_aon        { xen,passthrough; };
