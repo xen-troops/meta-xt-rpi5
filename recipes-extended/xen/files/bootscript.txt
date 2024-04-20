@@ -1,0 +1,45 @@
+fatload mmc 0 0xE00000 zephyr.bin
+fatload mmc 0 0x1200000 kernel_2712.img
+fatload mmc 0 0x1C00000 initrd_domU1
+fatload mmc 0 0x2000000 mmc@fff000_0.dtb
+fatload mmc 0 0x2200000 xen
+fatload mmc 0 0x2400000 bcm2712-rpi-5-b.dtb
+fdt addr 0x2400000
+fdt resize 1024
+fdt set /chosen \#address-cells <0x2>
+fdt set /chosen \#size-cells <0x2>
+fdt set /chosen xen,xen-bootargs "console=dtuart dtuart=/soc/serial@7d001000 dom0_mem=128M dom0_max_vcpus=1"
+fdt mknod /chosen dom0
+fdt set /chosen/dom0 compatible  "xen,linux-zimage" "xen,multiboot-module" "multiboot,module"
+fdt set /chosen/dom0 reg <0x0 0xE00000 0x0 0x369004 >
+fdt set /chosen xen,dom0-bootargs "console=hvc0 earlycon=xen earlyprintk=xen clk_ignore_unused root=/dev/ram0"
+fdt set /axi/mmc@fff000 xen,passthrough 
+fdt set /soc/gpio@7d517c00 xen,passthrough 
+fdt mknod /chosen domU0
+fdt set /chosen/domU0 compatible "xen,domain"
+fdt set /chosen/domU0 \#address-cells <0x2>
+fdt set /chosen/domU0 \#size-cells <0x2>
+fdt set /chosen/domU0 memory <0 524288>
+fdt set /chosen/domU0 cpus <1>
+fdt set /chosen/domU0 xen,static-mem <0x0 0x40000000 0x0 0x20000000>
+fdt set /chosen/domU0 direct-map
+fdt set /chosen/domU0 vpl011 <0x1>
+fdt set /chosen/domU0 xen,enhanced "enabled"
+fdt mknod /chosen/domU0 module0x1200000
+fdt set /chosen/domU0/module0x1200000 compatible  "multiboot,kernel" "multiboot,module"
+fdt set /chosen/domU0/module0x1200000 reg <0x0 0x1200000 0x0 0x8F5735 >
+fdt set /chosen/domU0/module0x1200000 bootargs "console=ttyAMA0 earlycon=xen earlyprintk=xen clk_ignore_unused root=PARTUUID=1c507a66-02 rootfstype=ext4 rootwait"
+fdt mknod /chosen/domU0 module0x1C00000
+fdt set /chosen/domU0/module0x1C00000 compatible  "multiboot,ramdisk" "multiboot,module"
+fdt set /chosen/domU0/module0x1C00000 reg <0x0 0x1C00000 0x0 0x310DD0 >
+fdt mknod /chosen/domU0 module0x2000000
+fdt set /chosen/domU0/module0x2000000 compatible  "multiboot,device-tree" "multiboot,module"
+fdt set /chosen/domU0/module0x2000000 reg <0x0 0x2000000 0x0 0x8FB >
+setenv fdt_high 0xffffffffffffffff
+fdt rm /soc/serial@7d001400 
+fdt rm /soc/serial@7d001a00
+#fdt set /soc/gpio@7d517c00 xen,passthrough
+fdt print /chosen
+printenv
+#booti 0x00080000 - ${fdt_addr}
+booti 0x2200000 - 0x2400000
