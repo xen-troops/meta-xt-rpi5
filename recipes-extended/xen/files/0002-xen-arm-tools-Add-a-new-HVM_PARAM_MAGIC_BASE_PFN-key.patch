@@ -1,0 +1,81 @@
+From 37f831757c3ddba875edf83499691bee3ef9c113 Mon Sep 17 00:00:00 2001
+From: Henry Wang <xin.wang2@amd.com>
+Date: Fri, 26 Apr 2024 11:14:54 +0800
+Subject: [PATCH 2/3] xen/arm, tools: Add a new HVM_PARAM_MAGIC_BASE_PFN key in
+ HVMOP
+
+For use cases such as Dom0less PV drivers, a mechanism to communicate
+Dom0less DomU's static data with the runtime control plane (Dom0) is
+needed. Since on Arm HVMOP is already the existing approach to address
+such use cases (for example the allocation of HVM_PARAM_CALLBACK_IRQ),
+add a new HVMOP key HVM_PARAM_MAGIC_BASE_PFN for storing the magic
+page region base PFN. The value will be set at Dom0less DomU
+construction time after Dom0less DomU's magic page region has been
+allocated.
+
+To keep consistent, also set the value for HVM_PARAM_MAGIC_BASE_PFN
+for libxl guests in alloc_magic_pages().
+
+Reported-by: Alec Kwapis <alec.kwapis@medtronic.com>
+Signed-off-by: Henry Wang <xin.wang2@amd.com>
+Message-ID: <20240426031455.579637-3-xin.wang2@amd.com>
+---
+ tools/libs/guest/xg_dom_arm.c   | 2 ++
+ xen/arch/arm/dom0less-build.c   | 2 ++
+ xen/arch/arm/hvm.c              | 1 +
+ xen/include/public/hvm/params.h | 1 +
+ 4 files changed, 6 insertions(+)
+
+diff --git a/tools/libs/guest/xg_dom_arm.c b/tools/libs/guest/xg_dom_arm.c
+index 8cc7f27dbb..3c08782d1d 100644
+--- a/tools/libs/guest/xg_dom_arm.c
++++ b/tools/libs/guest/xg_dom_arm.c
+@@ -74,6 +74,8 @@ static int alloc_magic_pages(struct xc_dom_image *dom)
+     xc_clear_domain_page(dom->xch, dom->guest_domid, base + MEMACCESS_PFN_OFFSET);
+     xc_clear_domain_page(dom->xch, dom->guest_domid, dom->vuart_gfn);
+ 
++    xc_hvm_param_set(dom->xch, dom->guest_domid, HVM_PARAM_MAGIC_BASE_PFN,
++            base);
+     xc_hvm_param_set(dom->xch, dom->guest_domid, HVM_PARAM_CONSOLE_PFN,
+             dom->console_pfn);
+     xc_hvm_param_set(dom->xch, dom->guest_domid, HVM_PARAM_STORE_PFN,
+diff --git a/xen/arch/arm/dom0less-build.c b/xen/arch/arm/dom0less-build.c
+index 40dc85c759..72187c167d 100644
+--- a/xen/arch/arm/dom0less-build.c
++++ b/xen/arch/arm/dom0less-build.c
+@@ -861,6 +861,8 @@ static int __init construct_domU(struct domain *d,
+             free_domheap_pages(magic_pg, get_order_from_pages(NR_MAGIC_PAGES));
+             return rc;
+         }
++
++        d->arch.hvm.params[HVM_PARAM_MAGIC_BASE_PFN] = gfn_x(gfn);
+     }
+ 
+     return rc;
+diff --git a/xen/arch/arm/hvm.c b/xen/arch/arm/hvm.c
+index 0989309fea..fa6141e30c 100644
+--- a/xen/arch/arm/hvm.c
++++ b/xen/arch/arm/hvm.c
+@@ -55,6 +55,7 @@ static int hvm_allow_get_param(const struct domain *d, unsigned int param)
+     case HVM_PARAM_STORE_EVTCHN:
+     case HVM_PARAM_CONSOLE_PFN:
+     case HVM_PARAM_CONSOLE_EVTCHN:
++    case HVM_PARAM_MAGIC_BASE_PFN:
+         return 0;
+ 
+         /*
+diff --git a/xen/include/public/hvm/params.h b/xen/include/public/hvm/params.h
+index a22b4ed45d..c1720b33b9 100644
+--- a/xen/include/public/hvm/params.h
++++ b/xen/include/public/hvm/params.h
+@@ -76,6 +76,7 @@
+  */
+ #define HVM_PARAM_STORE_PFN    1
+ #define HVM_PARAM_STORE_EVTCHN 2
++#define HVM_PARAM_MAGIC_BASE_PFN    3
+ 
+ #define HVM_PARAM_IOREQ_PFN    5
+ 
+-- 
+2.34.1
+

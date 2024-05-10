@@ -1,5 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
+require xen.inc
 require xen-source.inc
 
 SRC_URI:append = " \

@@ -1,0 +1,112 @@
+From 9c6aa42c547835372b9a13ef197f646a86229be3 Mon Sep 17 00:00:00 2001
+From: Henry Wang <xin.wang2@amd.com>
+Date: Fri, 26 Apr 2024 11:14:55 +0800
+Subject: [PATCH 3/3] tools/init-dom0less: Avoid hardcoding GUEST_MAGIC_BASE
+
+Currently the GUEST_MAGIC_BASE in the init-dom0less application is
+hardcoded, which will lead to failures for 1:1 direct-mapped Dom0less
+DomUs.
+
+Since the guest magic region is now allocated from the hypervisor,
+instead of hardcoding the guest magic pages region, use
+xc_hvm_param_get() to get the guest magic region PFN, and based on
+that the XenStore PFN can be calculated. Also, we don't need to set
+the max mem anymore, so drop the call to xc_domain_setmaxmem(). Rename
+the alloc_xs_page() to get_xs_page() to reflect the changes.
+
+Take the opportunity to do some coding style improvements when possible.
+
+Reported-by: Alec Kwapis <alec.kwapis@medtronic.com>
+Signed-off-by: Henry Wang <xin.wang2@amd.com>
+Message-ID: <20240426031455.579637-4-xin.wang2@amd.com>
+---
+ tools/helpers/init-dom0less.c | 38 +++++++++++++++--------------------
+ 1 file changed, 16 insertions(+), 22 deletions(-)
+
+diff --git a/tools/helpers/init-dom0less.c b/tools/helpers/init-dom0less.c
+index fee93459c4..7f6953a818 100644
+--- a/tools/helpers/init-dom0less.c
++++ b/tools/helpers/init-dom0less.c
+@@ -19,24 +19,20 @@
+ #define XENSTORE_PFN_OFFSET 1
+ #define STR_MAX_LENGTH 128
+ 
+-static int alloc_xs_page(struct xc_interface_core *xch,
+-                         libxl_dominfo *info,
+-                         uint64_t *xenstore_pfn)
++static int get_xs_page(struct xc_interface_core *xch, libxl_dominfo *info,
++                       uint64_t *xenstore_pfn)
+ {
+     int rc;
+-    const xen_pfn_t base = GUEST_MAGIC_BASE >> XC_PAGE_SHIFT;
+-    xen_pfn_t p2m = (GUEST_MAGIC_BASE >> XC_PAGE_SHIFT) + XENSTORE_PFN_OFFSET;
++    xen_pfn_t magic_base_pfn;
+ 
+-    rc = xc_domain_setmaxmem(xch, info->domid,
+-                             info->max_memkb + (XC_PAGE_SIZE/1024));
+-    if (rc < 0)
+-        return rc;
+-
+-    rc = xc_domain_populate_physmap_exact(xch, info->domid, 1, 0, 0, &p2m);
+-    if (rc < 0)
+-        return rc;
++    rc = xc_hvm_param_get(xch, info->domid, HVM_PARAM_MAGIC_BASE_PFN,
++                          &magic_base_pfn);
++    if (rc < 0) {
++        printf("Failed to get HVM_PARAM_MAGIC_BASE_PFN\n");
++        return 1;
++    }
+ 
+-    *xenstore_pfn = base + XENSTORE_PFN_OFFSET;
++    *xenstore_pfn = magic_base_pfn + XENSTORE_PFN_OFFSET;
+     rc = xc_clear_domain_page(xch, info->domid, *xenstore_pfn);
+     if (rc < 0)
+         return rc;
+@@ -100,6 +96,7 @@ static bool do_xs_write_vm(struct xs_handle *xsh, xs_transaction_t t,
+  */
+ static int create_xenstore(struct xs_handle *xsh,
+                            libxl_dominfo *info, libxl_uuid uuid,
++                           xen_pfn_t xenstore_pfn,
+                            evtchn_port_t xenstore_port)
+ {
+     domid_t domid;
+@@ -145,8 +142,7 @@ static int create_xenstore(struct xs_handle *xsh,
+     rc = snprintf(target_memkb_str, STR_MAX_LENGTH, "%"PRIu64, info->current_memkb);
+     if (rc < 0 || rc >= STR_MAX_LENGTH)
+         return rc;
+-    rc = snprintf(ring_ref_str, STR_MAX_LENGTH, "%lld",
+-                  (GUEST_MAGIC_BASE >> XC_PAGE_SHIFT) + XENSTORE_PFN_OFFSET);
++    rc = snprintf(ring_ref_str, STR_MAX_LENGTH, "%"PRIu_xen_pfn, xenstore_pfn);
+     if (rc < 0 || rc >= STR_MAX_LENGTH)
+         return rc;
+     rc = snprintf(xenstore_port_str, STR_MAX_LENGTH, "%u", xenstore_port);
+@@ -245,8 +241,8 @@ static int init_domain(struct xs_handle *xsh,
+     if (!xenstore_evtchn)
+         return 0;
+ 
+-    /* Alloc xenstore page */
+-    if (alloc_xs_page(xch, info, &xenstore_pfn) != 0) {
++    /* Get xenstore page */
++    if (get_xs_page(xch, info, &xenstore_pfn) != 0) {
+         printf("Error on alloc magic pages\n");
+         return 1;
+     }
+@@ -278,13 +274,11 @@ static int init_domain(struct xs_handle *xsh,
+     if (rc < 0)
+         return rc;
+ 
+-    rc = create_xenstore(xsh, info, uuid, xenstore_evtchn);
++    rc = create_xenstore(xsh, info, uuid, xenstore_pfn, xenstore_evtchn);
+     if (rc)
+         err(1, "writing to xenstore");
+ 
+-    rc = xs_introduce_domain(xsh, info->domid,
+-            (GUEST_MAGIC_BASE >> XC_PAGE_SHIFT) + XENSTORE_PFN_OFFSET,
+-            xenstore_evtchn);
++    rc = xs_introduce_domain(xsh, info->domid, xenstore_pfn, xenstore_evtchn);
+     if (!rc)
+         err(1, "xs_introduce_domain");
+     return 0;
+-- 
+2.34.1
+

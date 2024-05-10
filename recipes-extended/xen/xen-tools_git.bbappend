@@ -1,6 +1,7 @@
 # Avoid redundant runtime dependency on python3-core
 RDEPENDS:${PN}:remove:class-target = " ${PYTHON_PN}-core" 
 
+require xen.inc
 require xen-source.inc
 
 PACKAGECONFIG:append = " xsm"
