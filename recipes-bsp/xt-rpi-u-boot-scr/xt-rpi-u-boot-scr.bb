@@ -30,6 +30,9 @@ XENPOLICY_IMAGE ?= "xenpolicy"
 XENPOLICY_IMG_ADDR ?= "0x2300000"
 UBOOT_BOOT_SCRIPT ?= "boot.scr"
 UBOOT_BOOT_SCRIPT_SOURCE ?= "boot.cmd"
+XEN_BOOTARGS ?= "console=dtuart dtuart=\/soc\/serial@7d001000 dom0_mem=128M dom0_max_vcpus=1 xsm=flask flask=permissive"
+DOM0_BOOTARGS ?= "console=hvc0 earlycon=xen earlyprintk=xen clk_ignore_unused root=\/dev\/ram0"
+DOMD_BOOTARGS ?= "console=ttyAMA0 earlycon=xen earlyprintk=xen clk_ignore_unused root=\/dev\/mmcblk0p2 rootfstype=ext4 rootwait"
 
 do_compile() {
     sed -e 's/@@BOOT_MEDIA@@/${BOOT_MEDIA}/g' \
@@ -45,6 +48,9 @@ do_compile() {
         -e 's/@@DOMD_DTB_ADDR@@/${DOMD_DTB_ADDR}/g' \
         -e 's/@@DOMD_IMAGE@@/${DOMD_IMAGE}/g' \
         -e 's/@@DOMD_IMG_ADDR@@/${DOMD_IMG_ADDR}/g' \
+        -e 's/@@XEN_BOOTARGS@@/${XEN_BOOTARGS}/g' \
+        -e 's/@@DOM0_BOOTARGS@@/${DOM0_BOOTARGS}/g' \
+        -e 's/@@DOMD_BOOTARGS@@/${DOMD_BOOTARGS}/g' \
         "${WORKDIR}/${TEMPLATE_FILE}" > "${WORKDIR}/${UBOOT_BOOT_SCRIPT_SOURCE}"
 
     mkimage -A ${UBOOT_ARCH} -T script -C none -n "Boot script" -d "${WORKDIR}/${UBOOT_BOOT_SCRIPT_SOURCE}" ${UBOOT_BOOT_SCRIPT}
