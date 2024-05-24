@@ -20,7 +20,12 @@ PACKAGE_INSTALL:append = " \
     coreutils \
     u-boot \
     xen \
-    xen-tools \
+    xen-tools-scripts-network \
+    xen-tools-scripts-block \
+    xen-tools-xenstore \
+    xen-tools-devd \
+    virtual-xenstored \
+    xen-network \
 "
 
 IMAGE_FSTYPES:remove = "wic.bz2 wic.bmap ext3"
