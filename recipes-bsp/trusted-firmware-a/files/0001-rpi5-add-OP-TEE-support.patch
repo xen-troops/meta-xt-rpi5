@@ -1,0 +1,141 @@
+From f832e43ccfb192227037ce593930f0f69904bea4 Mon Sep 17 00:00:00 2001
+From: Volodymyr Babchuk <volodymyr_babchuk@epam.com>
+Date: Wed, 22 May 2024 02:05:23 +0300
+Subject: [PATCH] rpi5: add OP-TEE support
+
+OP-TEE support for RPI5 differs from the RPI3 one because on RPI5 we
+have BL31 only and there is no way to load additional image into
+memory. Only option is to attach OP-TEE image to the end of BL31 so
+they can be loaded together by VPU.
+
+So this patch assumes that OP-TEE image is located right after BL31 at
+address 0x80000. But we can't boot OP-TEE at this address because VPU
+will put kernel right behind OP-TEE image, at 0x200000. It is not
+possible to change kernel load address with `kernel_addr` option in
+config.txt anymore. This means that BL31 should move OP-TEE to empty
+memory region. By default BL31 moves it at the end of 1GB block, but
+this can be changed with BL31_BASE parameter.
+
+BL31 will pass DTB address to the OP-TEE, so it will be able to
+reserve memory for itself and provide correct entries in /firmware
+section.
+
+Documentation describes how to attach OP-TEE image to BL31.
+
+Change-Id: I375ca19e7234053b9d6cee6b644ecc55492d85f2
+Signed-off-by: Volodymyr Babchuk <volodymyr_babchuk@epam.com>
+---
+ docs/plat/rpi5.rst                | 17 +++++++++++++++++
+ plat/rpi/common/rpi3_common.c     |  9 +++++++++
+ plat/rpi/common/rpi4_bl31_setup.c |  9 +++++++++
+ plat/rpi/rpi5/platform.mk         | 19 +++++++++++++++++++
+ 4 files changed, 54 insertions(+)
+
+diff --git a/docs/plat/rpi5.rst b/docs/plat/rpi5.rst
+index f2e1b9f2d..4710ac319 100644
+--- a/docs/plat/rpi5.rst
++++ b/docs/plat/rpi5.rst
+@@ -65,6 +65,23 @@ options may be necessary.
+ By default, all boot stages print messages to the dedicated UART debug port.
+ Configuration is ``115200 8n1``.
+ 
++OP-TEE
++------
++
++It is possible to use OP-TEE. But there is a caveat: OP-TEE image should be
++load together with TF-A image, but RPI loader can load one file only. Solution
++is to pack TF-A and OP-TEE into one image.
++
++Build TF-A with ``SPD=opted`` option and then attach OP-TEE image to TF-A:
++
++.. code:: shell
++
++    cp build/rpi5/debug/bl31.bin bl31_bl32.bin
++    dd if=tee-raw.bin of=bl31_bl32.bin bs=1024 seek=512
++
++Then copy resulting ``bl31_bl32.bin`` to boot media as described in
++the previous section.
++
+ Design
+ ------------------
+ 
+diff --git a/plat/rpi/common/rpi3_common.c b/plat/rpi/common/rpi3_common.c
+index 89764969d..1051857dd 100644
+--- a/plat/rpi/common/rpi3_common.c
++++ b/plat/rpi/common/rpi3_common.c
+@@ -48,6 +48,12 @@
+ 				RPI3_OPTEE_PAGEABLE_LOAD_BASE,	\
+ 				RPI3_OPTEE_PAGEABLE_LOAD_SIZE,	\
+ 				MT_MEMORY | MT_RW | MT_SECURE)
++# ifdef RPI_OPTEE_IMAGE_BASE
++# define MAP_OPTEE_IMAGE_PAGEABLE	MAP_REGION_FLAT(		\
++					RPI_OPTEE_IMAGE_BASE,		\
++					RPI_OPTEE_IMAGE_SIZE,		\
++					MT_MEMORY | MT_RW | MT_SECURE)
++# endif
+ #endif
+ 
+ /*
+@@ -93,6 +99,9 @@ static const mmap_region_t plat_rpi3_mmap[] = {
+ #endif
+ #ifdef BL32_BASE
+ 	MAP_BL32_MEM,
++#endif
++#ifdef RPI_OPTEE_IMAGE_BASE
++	MAP_OPTEE_IMAGE_PAGEABLE,
+ #endif
+ 	{0}
+ };
+diff --git a/plat/rpi/common/rpi4_bl31_setup.c b/plat/rpi/common/rpi4_bl31_setup.c
+index a7228fd4f..ab0355fc8 100644
+--- a/plat/rpi/common/rpi4_bl31_setup.c
++++ b/plat/rpi/common/rpi4_bl31_setup.c
+@@ -132,6 +132,15 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
+ 	/* Initialize the console to provide early debug support. */
+ 	rpi3_console_init();
+ 
++#ifdef SPD_opteed
++	VERBOSE("rpi: Moving OP-TEE Image to %x\n", BL32_BASE);
++	memcpy((void*)BL32_BASE, (void*)RPI_OPTEE_IMAGE_BASE,
++	       RPI_OPTEE_IMAGE_SIZE);
++	bl32_image_ep_info.pc = BL32_BASE;
++	bl32_image_ep_info.spsr = rpi3_get_spsr_for_bl33_entry();
++	bl32_image_ep_info.args.arg3 = rpi4_get_dtb_address();
++	SET_SECURITY_STATE(bl33_image_ep_info.h.attr, SECURE);
++#endif
+ 	bl33_image_ep_info.pc = plat_get_ns_image_entrypoint();
+ 	bl33_image_ep_info.spsr = rpi3_get_spsr_for_bl33_entry();
+ 	SET_SECURITY_STATE(bl33_image_ep_info.h.attr, NON_SECURE);
+diff --git a/plat/rpi/rpi5/platform.mk b/plat/rpi/rpi5/platform.mk
+index 81b7dedfb..c24e90de5 100644
+--- a/plat/rpi/rpi5/platform.mk
++++ b/plat/rpi/rpi5/platform.mk
+@@ -101,6 +101,25 @@ ifeq (${ARCH},aarch32)
+   $(error Error: AArch32 not supported on rpi5)
+ endif
+ 
++ifeq (${SPD},opteed)
++
++# Very end of first 2GB
++BL32_BASE		?= 0x1D000000
++BL32_MEM_SIZE		?= 0x02000000
++BL32_MEM_BASE		= BL32_BASE
++
++# We expect that OP-TEE image will be placed right after TF-A
++RPI_OPTEE_IMAGE_BASE	?= 0x80000
++# 1MB should be enough
++RPI_OPTEE_IMAGE_SIZE	?= 0x100000
++
++$(eval $(call add_define,BL32_MEM_BASE))
++$(eval $(call add_define,BL32_MEM_SIZE))
++$(eval $(call add_define,BL32_BASE))
++$(eval $(call add_define,RPI_OPTEE_IMAGE_BASE))
++$(eval $(call add_define,RPI_OPTEE_IMAGE_SIZE))
++endif
++
+ ifneq ($(ENABLE_STACK_PROTECTOR), 0)
+ PLAT_BL_COMMON_SOURCES	+=	drivers/rpi3/rng/rpi3_rng.c		\
+ 				plat/rpi/common/rpi3_stack_protector.c
+-- 
+2.45.1
+
