@@ -1,0 +1,147 @@
+From 551152f7bf9d2f34df12b516c002d64fecebe7e7 Mon Sep 17 00:00:00 2001
+From: Volodymyr Babchuk <volodymyr_babchuk@epam.com>
+Date: Wed, 29 May 2024 00:42:53 +0300
+Subject: [PATCH] arm: dom0less: add TEE support
+
+Allow to provide TEE type for a Dom0less guest via "xen,tee"
+property. Create appropriate nodes in the guests' device tree and
+initialize tee subsystem for it.
+
+Signed-off-by: Volodymyr Babchuk <volodymyr_babchuk@epam.com>
+---
+ xen/arch/arm/dom0less-build.c     | 69 +++++++++++++++++++++++++++++++
+ xen/arch/arm/include/asm/kernel.h |  3 ++
+ 2 files changed, 72 insertions(+)
+
+diff --git a/xen/arch/arm/dom0less-build.c b/xen/arch/arm/dom0less-build.c
+index fb63ec6fd1..1ea3ecc45c 100644
+--- a/xen/arch/arm/dom0less-build.c
++++ b/xen/arch/arm/dom0less-build.c
+@@ -15,6 +15,7 @@
+ #include <asm/domain_build.h>
+ #include <asm/static-memory.h>
+ #include <asm/static-shmem.h>
++#include <asm/tee/tee.h>
+ 
+ bool __init is_dom0less_mode(void)
+ {
+@@ -277,6 +278,42 @@ static int __init make_vpl011_uart_node(struct kernel_info *kinfo)
+ }
+ #endif
+ 
++#ifdef CONFIG_OPTEE
++static int __init make_optee_node(struct kernel_info *kinfo)
++{
++    void *fdt = kinfo->fdt;
++    int res;
++
++    res = fdt_begin_node(fdt, "firmware");
++    if ( res )
++        return res;
++
++    res = fdt_begin_node(fdt, "optee");
++    if ( res )
++        return res;
++
++    res = fdt_property_string(fdt, "compatible", "linaro,optee-tz");
++    if ( res )
++        return res;
++
++    res = fdt_property_string(fdt, "method", "hvc");
++    if ( res )
++        return res;
++
++    /* end of "optee" */
++    res = fdt_end_node(fdt);
++    if ( res )
++        return res;
++
++    /* end of "firmware" */
++    res = fdt_end_node(fdt);
++    if ( res )
++        return res;
++
++    return 0;
++}
++#endif
++
+ /*
+  * Scan device tree properties for passthrough specific information.
+  * Returns < 0 on error
+@@ -650,6 +687,15 @@ static int __init prepare_dtb_domU(struct domain *d, struct kernel_info *kinfo)
+     if ( ret )
+         goto err;
+ 
++#ifdef CONFIG_OPTEE
++    if ( kinfo->tee_type == XEN_DOMCTL_CONFIG_TEE_OPTEE)
++    {
++        ret = make_optee_node(kinfo);
++        if ( ret )
++            goto err;
++    }
++#endif
++
+     /*
+      * domain_handle_dtb_bootmodule has to be called before the rest of
+      * the device tree is generated because it depends on the value of
+@@ -743,6 +789,9 @@ static int __init construct_domU(struct domain *d,
+ {
+     struct kernel_info kinfo = {};
+     const char *dom0less_enhanced;
++#ifdef CONFIG_TEE
++    const char *tee;
++#endif
+     int rc;
+     u64 mem;
+     u32 p2m_mem_mb;
+@@ -786,6 +835,18 @@ static int __init construct_domU(struct domain *d,
+     else if ( rc == 0 && !strcmp(dom0less_enhanced, "no-xenstore") )
+         kinfo.dom0less_feature = DOM0LESS_ENHANCED_NO_XS;
+ 
++#ifdef CONFIG_TEE
++    rc = dt_property_read_string(node, "xen,tee", &tee);
++    if ( rc == -EILSEQ ||
++         rc == -ENODATA ||
++         (rc == 0 && !strcmp(tee, "none")) )
++    {
++        if ( !hardware_domain )
++            kinfo.tee_type = XEN_DOMCTL_CONFIG_TEE_NONE;
++    }
++    else if ( rc == 0 && !strcmp(tee, "optee") )
++        kinfo.tee_type = XEN_DOMCTL_CONFIG_TEE_OPTEE;
++#endif
+     if ( vcpu_create(d, 0) == NULL )
+         return -ENOMEM;
+ 
+@@ -824,6 +885,14 @@ static int __init construct_domU(struct domain *d,
+             return rc;
+     }
+ 
++#ifdef CONFIG_TEE
++    if ( kinfo.tee_type )
++    {
++        rc = tee_domain_init(d, kinfo.tee_type);
++        if ( rc < 0 )
++            return rc;
++    }
++#endif
+     rc = prepare_dtb_domU(d, &kinfo);
+     if ( rc < 0 )
+         return rc;
+diff --git a/xen/arch/arm/include/asm/kernel.h b/xen/arch/arm/include/asm/kernel.h
+index 0a23e86c2d..7e7b3f4d56 100644
+--- a/xen/arch/arm/include/asm/kernel.h
++++ b/xen/arch/arm/include/asm/kernel.h
+@@ -57,6 +57,9 @@ struct kernel_info {
+     /* Enable pl011 emulation */
+     bool vpl011;
+ 
++    /* TEE type */
++    uint16_t tee_type;
++
+     /* Enable/Disable PV drivers interfaces */
+     uint16_t dom0less_feature;
+ 
+-- 
+2.45.1
+
