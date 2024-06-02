@@ -11,6 +11,7 @@ RPI_KERNEL_DEVICETREE:append = " \
     broadcom/${XEN_DT_NAME}.dtbo \
     broadcom/${USB_DT_NAME}.dtbo \
     broadcom/${MMC_DT_NAME}.dtbo \
+    broadcom/mmc-passthrough.dtbo \
 "
 
 KERNEL_IMAGETYPES:append = " Image.gz"
@@ -21,5 +22,6 @@ SRC_URI:append = " \
     file://${XEN_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://${USB_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://${MMC_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
+    file://mmc-passthrough.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://0001-drivers-mmc-host-sdhci-brcmstb-fix-no-pinctrl-case.patch \
 "

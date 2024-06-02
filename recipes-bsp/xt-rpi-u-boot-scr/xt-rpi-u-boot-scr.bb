@@ -9,8 +9,12 @@ INHIBIT_DEFAULT_DEPS = "1"
 
 TEMPLATE_FILE = "boot.cmd.xen.in"
 
-SRC_URI = "file://${TEMPLATE_FILE}"
-
+SRC_URI = " \
+    file://boot.cmd.xen.1.in \
+    file://boot.cmd.xen.2.in \
+    file://boot.cmd.xen.3.in \
+"
+MMC_PASSTHROUGH_DTBO = "mmc-passthrough.dtbo"
 BOOT_MEDIA ?= "mmc"
 DOM0_IMAGE ?= "zephyr.bin"
 DOM0_IMG_ADDR ?= "0xe00000"
@@ -35,6 +39,19 @@ DOM0_BOOTARGS ?= "console=hvc0 earlycon=xen earlyprintk=xen clk_ignore_unused ro
 DOMD_BOOTARGS ?= "console=ttyAMA0 earlycon=xen earlyprintk=xen clk_ignore_unused root=\/dev\/mmcblk0p2 rootfstype=ext4 rootwait"
 
 do_compile() {
+    cat ${WORKDIR}/boot.cmd.xen.1.in > ${WORKDIR}/${TEMPLATE_FILE}
+    if ${@bb.utils.contains("MACHINE_FEATURES", "domd_mmc", "true", "false" ,d)}; then
+        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${MMC_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+    fi
+
+    cat ${WORKDIR}/boot.cmd.xen.2.in >> ${WORKDIR}/${TEMPLATE_FILE}
+    for dtbo in ${DOMD_OVERLAYS}; do
+        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} $dtbo" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+    done
+
+    cat ${WORKDIR}/boot.cmd.xen.3.in >> ${WORKDIR}/${TEMPLATE_FILE}
     sed -e 's/@@BOOT_MEDIA@@/${BOOT_MEDIA}/g' \
         -e 's/@@DOM0_IMAGE@@/${DOM0_IMAGE}/g' \
         -e 's/@@DOM0_IMG_ADDR@@/${DOM0_IMG_ADDR}/g' \
