@@ -51,7 +51,6 @@
 	status = "disabled";
 };
 
-&sdio1          { xen,passthrough; };
 &gio_aon        { xen,passthrough; };
 &rp1_eth        { xen,passthrough; };
 &pcie2          { xen,passthrough; };
