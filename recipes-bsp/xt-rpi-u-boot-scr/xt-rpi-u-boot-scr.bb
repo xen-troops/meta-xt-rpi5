@@ -15,6 +15,7 @@ SRC_URI = " \
     file://boot.cmd.xen.3.in \
 "
 MMC_PASSTHROUGH_DTBO = "mmc-passthrough.dtbo"
+USB_PASSTHROUGH_DTBO = "usb-passthrough.dtbo"
 BOOT_MEDIA ?= "mmc"
 DOM0_IMAGE ?= "zephyr.bin"
 DOM0_IMG_ADDR ?= "0xe00000"
@@ -42,6 +43,10 @@ do_compile() {
     cat ${WORKDIR}/boot.cmd.xen.1.in > ${WORKDIR}/${TEMPLATE_FILE}
     if ${@bb.utils.contains("MACHINE_FEATURES", "domd_mmc", "true", "false" ,d)}; then
         echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${MMC_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+    fi
+    if ${@bb.utils.contains("MACHINE_FEATURES", "domd_usb", "true", "false" ,d)}; then
+        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${USB_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
         echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     fi
 
