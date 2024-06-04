@@ -278,7 +278,6 @@
 			compatible = "brcm,brcmstb-reset";
 			#reset-cells = <0x1>;
 			reg = <0x10 0x1504318 0x0 0x30>;
-			extracted,path = "/axi/reset-controller@1504318";
 			xen,path = "/axi/reset-controller@1504318";
 			xen,force-assign-without-iommu = <0x1>;
 			xen,reg = <0x10 0x1504000 0x0 0x1000 0x10 0x1504000>;
@@ -288,7 +287,6 @@
 			compatible = "brcm,bcm7216-pcie-sata-rescal";
 			#reset-cells = <0x0>;
 			reg = <0x10 0x119500 0x0 0x10>;
-			extracted,path = "/axi/reset-controller@119500";
 			xen,path = "/axi/reset-controller@119500";
 			xen,force-assign-without-iommu = <0x1>;
 			xen,reg = <0x10 0x119000 0x0 0x1000 0x10 0x119000>;
