@@ -14,9 +14,13 @@ SRC_URI = " \
     file://boot.cmd.xen.2.in \
     file://boot.cmd.xen.3.in \
 "
+
+XEN_DTBO ?= "${RPI_SOC_FAMILY}-${MACHINE}-xen.dtbo"
 MMC_PASSTHROUGH_DTBO = "mmc-passthrough.dtbo"
 USB_PASSTHROUGH_DTBO = "usb-passthrough.dtbo"
 PCIE1_PASSTHROUGH_DTBO = "pcie1-passthrough.dtbo"
+WIFI_PASSTHROUGH_DTBO = "wifi-passthrough.dtbo"
+
 BOOT_MEDIA ?= "mmc"
 DOM0_IMAGE ?= "zephyr.bin"
 DOM0_IMG_ADDR ?= "0xe00000"
@@ -29,9 +33,8 @@ DOMD_DTB_ADDR = "0x1c00000"
 XEN_IMAGE ?= "xen"
 XEN_IMG_ADDR ?= "0x2000000"
 # XEN image max size = 2M
-XEN_DTBO ?= "${RPI_SOC_FAMILY}-${MACHINE}-xen.dtbo"
 XEN_DTBO_ADDR ?= "0x2200000"
-# XEN DTB max size = 1M
+# DTBO max size = 1M
 XENPOLICY_IMAGE ?= "xenpolicy"
 XENPOLICY_IMG_ADDR ?= "0x2300000"
 UBOOT_BOOT_SCRIPT ?= "boot.scr"
@@ -52,6 +55,10 @@ do_compile() {
     fi
     if ${@bb.utils.contains("MACHINE_FEATURES", "domd_nvme", "true", "false" ,d)}; then
         echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${PCIE1_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+    fi
+    if ${@bb.utils.contains("MACHINE_FEATURES", "domd_wifi", "true", "false" ,d)}; then
+        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${WIFI_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
         echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     fi
 
