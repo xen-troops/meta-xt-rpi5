@@ -7,7 +7,7 @@
 /plugin/;
 
 &rp1 {
-	usb@200000 {
+	rp1_usb0: usb@200000 {
 		reg = <0xc0 0x40200000 0x00 0x100000>;
 		compatible = "snps,dwc3";
 		dr_mode = "host";
