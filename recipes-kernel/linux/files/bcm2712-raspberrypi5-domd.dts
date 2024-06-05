@@ -48,7 +48,7 @@
 			brcm,msi-offset = <0>;
 			brcm,msi-pci-addr = <0xff 0xfffff000>;
 			xen,path = "/axi/msi-controller@130000";
-			xen,force-assign-without-iommu = <0x1>;
+			xen,force-assign-without-iommu;
 			xen,reg = <0x10 0x00130000 0x0 0x1000 0x10 0x00130000>;
 			interrupts = <0x00 0x80 0x04 0x00 0x81 0x04 0x00 0x82 0x04
 				      0x00 0x83 0x04 0x00 0x84 0x04 0x00 0x85 0x04
@@ -105,7 +105,7 @@
 			max-link-speed = <0x2>;
 			device_type = "pci";
 			xen,path = "/axi/pcie@120000";
-			xen,force-assign-without-iommu = <0x1>;
+			xen,force-assign-without-iommu;
 			xen,reg = <0x10 0x120000 0x0 0xA000 0x10 0x120000
 				   0x1f 0x00 0x0 0x600000 0x1f 0x00>;
 			status = "okay";
@@ -140,7 +140,7 @@
 					clock-names = "pclk", "hclk", "tsu_clk";
 					clocks = <&macb_pclk>, <&macb_hclk>, <&clocks18000 0x1d>;
 					xen,path = "/axi/pcie@120000/rp1/ethernet@100000";
-					xen,force-assign-without-iommu = <0x1>;
+					xen,force-assign-without-iommu;
 					xen,reg = <0xc0 0x40100000 0x0 0x4000 0xc0 0x40100000>;
 					status = "okay";
 
@@ -174,7 +174,7 @@
 							  "CD1_IO1_MICDAT1", "EN_MAX_USB_CUR",
 							  "-", "-", "-", "-";
 					xen,path = "/axi/pcie@120000/rp1/gpio@d0000";
-					xen,force-assign-without-iommu = <0x1>;
+					xen,force-assign-without-iommu;
 					xen,reg = <0xc0 0x400d0000 0x0 0xc000 0xc0 0x400d0000
 						   0xc0 0x400e0000 0x0 0xc000 0xc0 0x400e0000
 						   0xc0 0x400f0000 0x0 0xc000 0xc0 0x400f0000>;
@@ -197,7 +197,7 @@
 							  <&clocks18000 0xd>, <&clocks18000 0x1f>,
 							  <&clocks18000 0x20>, <&clocks18000 0x1d>;
 					xen,path = "/axi/pcie@120000/rp1/clocks@18000";
-					xen,force-assign-without-iommu = <0x1>;
+					xen,force-assign-without-iommu;
 					xen,reg = <0xc0 0x40018000 0x0 0x11000 0xc0 0x40018000>;
 				};
 			};
@@ -208,7 +208,7 @@
 			#reset-cells = <0x1>;
 			reg = <0x10 0x1504318 0x0 0x30>;
 			xen,path = "/axi/reset-controller@1504318";
-			xen,force-assign-without-iommu = <0x1>;
+			xen,force-assign-without-iommu;
 			xen,reg = <0x10 0x1504000 0x0 0x1000 0x10 0x1504000>;
 		};
 
@@ -217,7 +217,7 @@
 			#reset-cells = <0x0>;
 			reg = <0x10 0x119500 0x0 0x10>;
 			xen,path = "/axi/reset-controller@119500";
-			xen,force-assign-without-iommu = <0x1>;
+			xen,force-assign-without-iommu;
 			xen,reg = <0x10 0x119000 0x0 0x1000 0x10 0x119000>;
 		};
 	};
