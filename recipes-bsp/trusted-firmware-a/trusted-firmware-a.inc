@@ -9,6 +9,8 @@ SRC_URI_TRUSTED_FIRMWARE_A ?= "git://review.trustedfirmware.org/TF-A/trusted-fir
 SRCBRANCH = "master"
 SRC_URI = "${SRC_URI_TRUSTED_FIRMWARE_A};name=tfa;branch=${SRCBRANCH}"
 
+CCACHE_DISABLE = "1"
+
 UPSTREAM_CHECK_GITTAGREGEX = "^(lts-)?v(?P<pver>\d+(\.\d+)+)$"
 
 SRCREV_FORMAT = "tfa"
