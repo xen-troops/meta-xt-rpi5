@@ -5,14 +5,17 @@ DOMU_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-domd"
 XEN_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-xen"
 USB_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-usb"
 MMC_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-mmc"
+WIFI_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-wifi"
 
 RPI_KERNEL_DEVICETREE:append = " \
     broadcom/${DOMU_DT_NAME}.dtb \
     broadcom/${XEN_DT_NAME}.dtbo \
     broadcom/${USB_DT_NAME}.dtbo \
     broadcom/${MMC_DT_NAME}.dtbo \
+    broadcom/${WIFI_DT_NAME}.dtbo \
     broadcom/mmc-passthrough.dtbo \
     broadcom/usb-passthrough.dtbo \
+    broadcom/wifi-passthrough.dtbo \
 "
 
 KERNEL_IMAGETYPES:append = " Image.gz"
@@ -23,7 +26,9 @@ SRC_URI:append = " \
     file://${XEN_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://${USB_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://${MMC_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
+    file://${WIFI_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://mmc-passthrough.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://usb-passthrough.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
+    file://wifi-passthrough.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://0001-drivers-mmc-host-sdhci-brcmstb-fix-no-pinctrl-case.patch \
 "
