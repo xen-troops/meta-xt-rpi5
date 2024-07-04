@@ -16,6 +16,7 @@ SRC_URI = " \
 "
 MMC_PASSTHROUGH_DTBO = "mmc-passthrough.dtbo"
 USB_PASSTHROUGH_DTBO = "usb-passthrough.dtbo"
+PCIE1_PASSTHROUGH_DTBO = "pcie1-passthrough.dtbo"
 BOOT_MEDIA ?= "mmc"
 DOM0_IMAGE ?= "zephyr.bin"
 DOM0_IMG_ADDR ?= "0xe00000"
@@ -47,6 +48,10 @@ do_compile() {
     fi
     if ${@bb.utils.contains("MACHINE_FEATURES", "domd_usb", "true", "false" ,d)}; then
         echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${USB_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+    fi
+    if ${@bb.utils.contains("MACHINE_FEATURES", "domd_nvme", "true", "false" ,d)}; then
+        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${PCIE1_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
         echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     fi
 
