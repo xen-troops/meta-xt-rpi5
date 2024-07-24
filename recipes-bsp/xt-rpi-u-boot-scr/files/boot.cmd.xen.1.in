@@ -1,6 +1,6 @@
 fdt addr ${fdt_addr}
 
 fatload @@BOOT_MEDIA@@ 0 @@XEN_IMG_ADDR@@ @@XEN_IMAGE@@
-fatload @@BOOT_MEDIA@@ 0 @@XEN_DTBO_ADDR@@ @@XEN_DTBO@@
+fatload @@BOOT_MEDIA@@ 0 @@DTBO_LOAD_ADDR@@ @@XEN_DTBO@@
 fdt resize 2048
-fdt apply @@XEN_DTBO_ADDR@@
+fdt apply @@DTBO_LOAD_ADDR@@

@@ -33,7 +33,7 @@ DOMD_DTB_ADDR = "0x1c00000"
 XEN_IMAGE ?= "xen"
 XEN_IMG_ADDR ?= "0x2000000"
 # XEN image max size = 2M
-XEN_DTBO_ADDR ?= "0x2200000"
+DTBO_LOAD_ADDR ?= "0x2200000"
 # DTBO max size = 1M
 XENPOLICY_IMAGE ?= "xenpolicy"
 XENPOLICY_IMG_ADDR ?= "0x2300000"
@@ -46,26 +46,26 @@ DOMD_BOOTARGS ?= "console=ttyAMA0 earlycon=xen earlyprintk=xen clk_ignore_unused
 do_compile() {
     cat ${WORKDIR}/boot.cmd.xen.1.in > ${WORKDIR}/${TEMPLATE_FILE}
     if ${@bb.utils.contains("MACHINE_FEATURES", "domd_mmc", "true", "false" ,d)}; then
-        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${MMC_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
-        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fatload ${BOOT_MEDIA} 0 ${DTBO_LOAD_ADDR} ${MMC_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${DTBO_LOAD_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     fi
     if ${@bb.utils.contains("MACHINE_FEATURES", "domd_usb", "true", "false" ,d)}; then
-        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${USB_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
-        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fatload ${BOOT_MEDIA} 0 ${DTBO_LOAD_ADDR} ${USB_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${DTBO_LOAD_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     fi
     if ${@bb.utils.contains("MACHINE_FEATURES", "domd_nvme", "true", "false" ,d)}; then
-        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${PCIE1_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
-        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fatload ${BOOT_MEDIA} 0 ${DTBO_LOAD_ADDR} ${PCIE1_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${DTBO_LOAD_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     fi
     if ${@bb.utils.contains("MACHINE_FEATURES", "domd_wifi", "true", "false" ,d)}; then
-        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${WIFI_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
-        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fatload ${BOOT_MEDIA} 0 ${DTBO_LOAD_ADDR} ${WIFI_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${DTBO_LOAD_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     fi
 
     cat ${WORKDIR}/boot.cmd.xen.2.in >> ${WORKDIR}/${TEMPLATE_FILE}
     for dtbo in ${DOMD_OVERLAYS}; do
-        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} $dtbo" >> ${WORKDIR}/${TEMPLATE_FILE}
-        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fatload ${BOOT_MEDIA} 0 ${DTBO_LOAD_ADDR} $dtbo" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${DTBO_LOAD_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     done
 
     cat ${WORKDIR}/boot.cmd.xen.3.in >> ${WORKDIR}/${TEMPLATE_FILE}
@@ -75,7 +75,7 @@ do_compile() {
         -e 's/@@XEN_IMAGE@@/${XEN_IMAGE}/g' \
         -e 's/@@XEN_IMG_ADDR@@/${XEN_IMG_ADDR}/g' \
         -e 's/@@XEN_DTBO@@/${XEN_DTBO}/g' \
-        -e 's/@@XEN_DTBO_ADDR@@/${XEN_DTBO_ADDR}/g' \
+        -e 's/@@DTBO_LOAD_ADDR@@/${DTBO_LOAD_ADDR}/g' \
         -e 's/@@XENPOLICY_IMAGE@@/${XENPOLICY_IMAGE}/g' \
         -e 's/@@XENPOLICY_IMG_ADDR@@/${XENPOLICY_IMG_ADDR}/g' \
         -e 's/@@DOMD_DTB@@/${DOMD_DTB}/g' \
