@@ -10,4 +10,5 @@ EXTRA_OEMAKE:append = " \
 	"
 SRC_URI += "\
     file://0001-plat-rpi5-add-basic-Raspberry-Pi-5-support.patch \
+    file://0001-mmu-ignore-VA-spaces-in-core_mmu_get_type_by_pa.patch \
 "

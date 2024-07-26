@@ -1,0 +1,39 @@
+From d0311fc02fec094f0f790e18a5d864bbb57931e4 Mon Sep 17 00:00:00 2001
+From: Volodymyr Babchuk <volodymyr_babchuk@epam.com>
+Date: Fri, 26 Jul 2024 16:15:17 +0300
+Subject: [PATCH 1/2] mmu: ignore VA spaces in core_mmu_get_type_by_pa
+
+VA spaces have no valid PA addresses stored in memory map, so they are
+not valid return values for core_mmu_get_type_by_pa() function.
+
+This issues was discovered when OP-TEE tried to access a device tree
+that was stored at the very beginning of physical address space. In
+may case it had PA address 0x112C0, which was "covered" by
+RES_VASPACE:
+
+D/TC:0 0   dump_mmap_table:838 type RES_VASPACE  va 0x1d800000..0x1e1fffff pa 0x00000000..0x009fffff size 0x00a00000 (pgdir)
+
+Signed-off-by: Volodymyr Babchuk <volodymyr_babchuk@epam.com>
+Acked-by: Jerome Forissier <jerome.forissier@linaro.org>
+---
+ core/mm/core_mmu.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/core/mm/core_mmu.c b/core/mm/core_mmu.c
+index 0a33f35b7..ca274f8d0 100644
+--- a/core/mm/core_mmu.c
++++ b/core/mm/core_mmu.c
+@@ -1651,7 +1651,9 @@ enum teecore_memtypes core_mmu_get_type_by_pa(paddr_t pa)
+ {
+ 	struct tee_mmap_region *map = find_map_by_pa(pa);
+ 
+-	if (!map)
++	/* VA spaces have no valid PAs in the memory map */
++	if (!map || map->type == MEM_AREA_RES_VASPACE ||
++	    map->type == MEM_AREA_SHM_VASPACE)
+ 		return MEM_AREA_MAXTYPE;
+ 	return map->type;
+ }
+-- 
+2.45.2
+
