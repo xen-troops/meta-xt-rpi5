@@ -1,0 +1,44 @@
+From b81bc374c351ec9e5804c7de7163b77b3924bc76 Mon Sep 17 00:00:00 2001
+From: Volodymyr Babchuk <volodymyr_babchuk@epam.com>
+Date: Fri, 26 Jul 2024 19:53:06 +0300
+Subject: [PATCH] bcm2712: enable linux kernel image header
+
+This change is needed to make OP-TEE operable on RPI5.
+
+This is somewhat convoluted, but in the essence, OP-TEE image is being
+loaded at address 0x80000 and we can't change that. Problem is that
+last versions (like 2024/06/05) of RPI5 firmware tries to load
+non-kernel images to the same address 0x80000, thus, overwriting
+OP-TEE image.
+
+This patch enables Linux kernel image for U-Boot, so firmware will
+treat U-Boot as a kernel image, placing it at different address,
+namely at 0x200000.
+
+Signed-off-by: Volodymyr Babchuk <volodymyr_babchuk@epam.com>
+Reviewed-by: Oleksii Moisieiev <oleksii_moisieiev@epam.com>
+Tested-by: Oleksii Moisieiev <oleksii_moisieiev@epam.com>
+---
+ arch/arm/mach-bcm283x/Kconfig | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/mach-bcm283x/Kconfig b/arch/arm/mach-bcm283x/Kconfig
+index c7509146be9a..9cc8f66de197 100644
+--- a/arch/arm/mach-bcm283x/Kconfig
++++ b/arch/arm/mach-bcm283x/Kconfig
+@@ -46,8 +46,12 @@ config BCM2711_64B
+ 
+ config BCM2712
+ 	bool "Broadcom BCM2712 SoC support"
++	select LINUX_KERNEL_IMAGE_HEADER
+ 	depends on ARCH_BCM283X
+ 
++config LNX_KRNL_IMG_TEXT_OFFSET_BASE
++	default TEXT_BASE
++
+ menu "Broadcom BCM283X family"
+ 	depends on ARCH_BCM283X
+ 
+-- 
+2.34.1
+
