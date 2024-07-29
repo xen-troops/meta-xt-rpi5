@@ -1,2 +1,2 @@
-SRCREV = "8532e54303e58e11b32c838fbc9c4e14bcccadc4"
+SRCREV = "b81bc374c351ec9e5804c7de7163b77b3924bc76"
 SRC_URI = "git://github.com/xen-troops/u-boot.git;protocol=https;branch=rpi5-2024.04-xt"
