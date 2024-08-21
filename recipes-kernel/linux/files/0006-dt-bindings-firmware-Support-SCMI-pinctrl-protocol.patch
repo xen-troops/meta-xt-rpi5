@@ -1,0 +1,90 @@
+From 4d5e0f5eceb896dc7016cc594193ffb3edc421f4 Mon Sep 17 00:00:00 2001
+From: Peng Fan <peng.fan@nxp.com>
+Date: Thu, 18 Apr 2024 09:32:29 +0800
+Subject: [PATCH 6/8] dt-bindings: firmware: Support SCMI pinctrl protocol
+
+Add SCMI v3.2 pinctrl protocol bindings with an example.
+
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Dhruva Gole <d-gole@ti.com>
+Signed-off-by: Peng Fan <peng.fan@nxp.com>
+Link: https://lore.kernel.org/r/20240418-pinctrl-scmi-v11-2-499dca9864a7@nxp.com
+Signed-off-by: Sudeep Holla <sudeep.holla@arm.com>
+(cherry picked from commit 1b403075e6cdd9e3bb35046c588cd513d1ef170b)
+Signed-off-by: Grygorii Strashko <grygorii_strashko@epam.com>
+---
+ .../bindings/firmware/arm,scmi.yaml           | 50 +++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/firmware/arm,scmi.yaml b/Documentation/devicetree/bindings/firmware/arm,scmi.yaml
+index b138f3d23df8..ea69d5907e54 100644
+--- a/Documentation/devicetree/bindings/firmware/arm,scmi.yaml
++++ b/Documentation/devicetree/bindings/firmware/arm,scmi.yaml
+@@ -237,6 +237,37 @@ properties:
+       reg:
+         const: 0x18
+ 
++  protocol@19:
++    type: object
++    allOf:
++      - $ref: '#/$defs/protocol-node'
++      - $ref: /schemas/pinctrl/pinctrl.yaml
++
++    unevaluatedProperties: false
++
++    properties:
++      reg:
++        const: 0x19
++
++    patternProperties:
++      '-pins$':
++        type: object
++        allOf:
++          - $ref: /schemas/pinctrl/pincfg-node.yaml#
++          - $ref: /schemas/pinctrl/pinmux-node.yaml#
++        unevaluatedProperties: false
++
++        description:
++          A pin multiplexing sub-node describes how to configure a
++          set of pins in some desired function.
++          A single sub-node may define several pin configurations.
++          This sub-node is using the default pinctrl bindings to configure
++          pin multiplexing and using SCMI protocol to apply a specified
++          configuration.
++
++    required:
++      - reg
++
+ additionalProperties: false
+ 
+ $defs:
+@@ -390,6 +421,25 @@ examples:
+             scmi_powercap: protocol@18 {
+                 reg = <0x18>;
+             };
++
++            scmi_pinctrl: protocol@19 {
++                reg = <0x19>;
++
++                i2c2-pins {
++                    groups = "g_i2c2_a", "g_i2c2_b";
++                    function = "f_i2c2";
++                };
++
++                mdio-pins {
++                    groups = "g_avb_mdio";
++                    drive-strength = <24>;
++                };
++
++                keys_pins: keys-pins {
++                    pins = "gpio_5_17", "gpio_5_20", "gpio_5_22", "gpio_2_1";
++                    bias-pull-up;
++                };
++            };
+         };
+     };
+ 
+-- 
+2.34.1
+
