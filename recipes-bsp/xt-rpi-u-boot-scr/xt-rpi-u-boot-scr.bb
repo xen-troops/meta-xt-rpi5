@@ -54,6 +54,10 @@ do_compile() {
         echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${PCIE1_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
         echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
     fi
+    if ${@bb.utils.contains("MACHINE_FEATURES", "scmi", "true", "false" ,d)}; then
+        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${XEN_DT_SCMI}.dtbo" >> ${WORKDIR}/${TEMPLATE_FILE}
+        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
+    fi
 
     cat ${WORKDIR}/boot.cmd.xen.2.in >> ${WORKDIR}/${TEMPLATE_FILE}
     for dtbo in ${DOMD_OVERLAYS}; do
