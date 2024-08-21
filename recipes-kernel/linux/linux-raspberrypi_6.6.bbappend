@@ -32,3 +32,16 @@ SRC_URI:append = " \
     file://pcie1-passthrough.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://0001-drivers-mmc-host-sdhci-brcmstb-fix-no-pinctrl-case.patch \
 "
+
+SRC_URI:append = "${@bb.utils.contains('MACHINE_FEATURES', 'scmi', ' file://scmi-config.cfg', '', d)}"
+
+SRC_URI:append = " \
+    file://0001-firmware-arm_scmi-Increase-the-maximum-opp-count-in-.patch \
+    file://0002-firmware-arm_scmi-Add-protocol-versioning-checks.patch \
+    file://0003-firmware-arm_scmi-Add-optional-flags-to-extended-nam.patch \
+    file://0004-firmware-arm_scmi-Add-support-for-multiple-vendors-c.patch \
+    file://0005-firmware-arm_scmi-Introduce-get_max_msg_size-helper-.patch \
+    file://0006-dt-bindings-firmware-Support-SCMI-pinctrl-protocol.patch \
+    file://0007-firmware-arm_scmi-Add-basic-support-for-SCMI-v3.2-pi.patch \
+    file://0008-pinctrl-Implementation-of-the-generic-scmi-pinctrl-d.patch \
+"
