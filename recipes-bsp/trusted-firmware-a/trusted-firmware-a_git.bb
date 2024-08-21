@@ -16,6 +16,8 @@ TFA_SPD:raspberrypi5 = "opteed"
 TFA_BUILD_TARGET:raspberrypi5 = "bl31"
 TFA_INSTALL_TARGET:raspberrypi5= "armstub8-2712"
 
+EXTRA_OEMAKE += "${@bb.utils.contains('MACHINE_FEATURES', 'scmi', 'SCMI_SERVER_SUPPORT=1', '', d)}"
+
 DEPENDS:append:raspberrypi5 = " optee-os"
 
 do_compile:append:raspberrypi5() {
