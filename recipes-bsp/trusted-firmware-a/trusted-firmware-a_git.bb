@@ -1,8 +1,10 @@
 require recipes-bsp/trusted-firmware-a/trusted-firmware-a.inc
 
 # Current master branch
-SRCREV_tfa = "09a1cc2a0bd066702daa269bf35de9c5743ccc93"
-SRCBRANCH = "master"
+SRC_URI_TRUSTED_FIRMWARE_A = "git://github.com/xen-troops/arm-trusted-firmware.git;protocol=https"
+
+SRCREV_tfa = "${AUTOREV}"
+SRCBRANCH = "rpi5_dev"
 
 LIC_FILES_CHKSUM += "file://docs/license.rst;md5=b5fbfdeb6855162dded31fadcd5d4dc5"
 
@@ -30,7 +32,3 @@ SRC_URI_MBEDTLS = "git://github.com/ARMmbed/mbedtls.git;name=mbedtls;protocol=ht
 SRCREV_mbedtls = "72718dd87e087215ce9155a826ee5a66cfbe9631"
 
 LIC_FILES_CHKSUM_MBEDTLS = "file://mbedtls/LICENSE;md5=3b83ef96387f14655fc854ddc3c6bd57"
-
-SRC_URI += "\
-  file://0001-rpi5-add-OP-TEE-support.patch \
-"
