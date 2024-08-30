@@ -50,3 +50,7 @@
 		status = "okay";
 	};
 };
+
+&pcie1 {
+	resets = <&scmi_reset 0>, <&scmi_reset 1>, <&reset_controller119500>;
+};

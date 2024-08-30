@@ -9,6 +9,38 @@
 		interrupt-controller;
 	};
 
+	firmware {
+		scmi {
+			scmi_reset: protocol@16 {
+				reg = <0x16>;
+				#reset_cells = <1>;
+			};
+
+			scmi_pinctrl: protocol@19 {
+				reg = <0x19>;
+				#pinctrl-cells = <0>;
+
+				scmi_sdio2_30_pins: scmi_sdio2_30_pins {
+					pin_clk {
+						function = "f_sd2";
+						pins = "gpio30";
+						bias-disable;
+					};
+					pin_cmd {
+						function = "f_sd2";
+						pins = "gpio31";
+						bias-pull-up;
+					};
+					pins_dat {
+						function = "f_sd2";
+						pins = "gpio32", "gpio33", "gpio34", "gpio35";
+						bias-pull-up;
+					};
+				};
+			};
+		};
+	};
+
 	passthrough: passthrough {
 		compatible = "raspberrypi,5-model-b", "brcm,bcm2712", "simple-bus";
 		ranges;
@@ -199,4 +231,8 @@
 			xen,reg = <0x10 0x119000 0x0 0x1000 0x10 0x119000>;
 		};
 	};
+};
+
+&pciex {
+	resets = <&scmi_reset 2>, <&scmi_reset 3>, <&reset_controller119500>;
 };
