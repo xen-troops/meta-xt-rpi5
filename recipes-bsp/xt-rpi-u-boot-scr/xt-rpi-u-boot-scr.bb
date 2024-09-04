@@ -17,6 +17,7 @@ SRC_URI = " \
 MMC_PASSTHROUGH_DTBO = "mmc-passthrough.dtbo"
 USB_PASSTHROUGH_DTBO = "usb-passthrough.dtbo"
 PCIE1_PASSTHROUGH_DTBO = "pcie1-passthrough.dtbo"
+
 BOOT_MEDIA ?= "mmc"
 DOM0_IMAGE ?= "zephyr.bin"
 DOM0_IMG_ADDR ?= "0xe00000"
@@ -40,20 +41,17 @@ XEN_BOOTARGS ?= "console=dtuart dtuart=\/soc\/serial@7d001000 dom0_mem=128M dom0
 DOM0_BOOTARGS ?= "console=hvc0 earlycon=xen earlyprintk=xen clk_ignore_unused root=\/dev\/ram0"
 DOMD_BOOTARGS ?= "console=ttyAMA0 earlycon=xen earlyprintk=xen clk_ignore_unused root=\/dev\/mmcblk0p2 rootfstype=ext4 rootwait"
 
+XEN_OVERLAYS = "${XEN_DTBO}"
+XEN_OVERLAYS:append = "${@bb.utils.contains("MACHINE_FEATURES", "domd_mmc", " ${MMC_PASSTHROUGH_DTBO}", "", d)}"
+XEN_OVERLAYS:append = "${@bb.utils.contains("MACHINE_FEATURES", "domd_usb", " ${USB_PASSTHROUGH_DTBO}", "", d)}"
+XEN_OVERLAYS:append = "${@bb.utils.contains("MACHINE_FEATURES", "domd_nvme", " ${PCIE1_PASSTHROUGH_DTBO}", "", d)}"
+
 do_compile() {
     cat ${WORKDIR}/boot.cmd.xen.1.in > ${WORKDIR}/${TEMPLATE_FILE}
-    if ${@bb.utils.contains("MACHINE_FEATURES", "domd_mmc", "true", "false" ,d)}; then
-        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${MMC_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
+    for dtbo in ${XEN_OVERLAYS}; do
+        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} $dtbo" >> ${WORKDIR}/${TEMPLATE_FILE}
         echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
-    fi
-    if ${@bb.utils.contains("MACHINE_FEATURES", "domd_usb", "true", "false" ,d)}; then
-        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${USB_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
-        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
-    fi
-    if ${@bb.utils.contains("MACHINE_FEATURES", "domd_nvme", "true", "false" ,d)}; then
-        echo "fatload ${BOOT_MEDIA} 0 ${XEN_DTBO_ADDR} ${PCIE1_PASSTHROUGH_DTBO}" >> ${WORKDIR}/${TEMPLATE_FILE}
-        echo "fdt apply ${XEN_DTBO_ADDR}" >> ${WORKDIR}/${TEMPLATE_FILE}
-    fi
+    done
 
     cat ${WORKDIR}/boot.cmd.xen.2.in >> ${WORKDIR}/${TEMPLATE_FILE}
     for dtbo in ${DOMD_OVERLAYS}; do
