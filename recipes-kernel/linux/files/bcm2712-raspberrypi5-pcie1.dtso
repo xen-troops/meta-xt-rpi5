@@ -10,7 +10,9 @@
 	pcie1: pcie@1000110000 {
 		compatible = "brcm,bcm2712-pcie";
 		device_type = "pci";
+		linux,pci-domain = <1>;
 		max-link-speed = <2>;
+		num-lanes = <1>;
 		#address-cells = <3>;
 		#size-cells = <2>;
 		#interrupt-cells = <1>;
@@ -33,17 +35,13 @@
 		 */
 //		msi-parent = <&mip1>;
 		msi-parent = <&pcie1>;
-		ranges = <0x02000000 0x00 0x00000000 0x1b 0x00000000 0x00 0xfffffffc>,
-			 <0x43000000 0x04 0x00000000 0x18 0x00000000 0x03 0x00000000>;
-
+		ranges = <0x02000000 0x00 0x00000000 0x1b 0x00000000 0x00 0xfffffffc>;
 		dma-ranges = <0x03000000 0x10 0x00000000 0x00 0x00000000 0x10 0x00000000>;
-
-		resets = <&reset_controller1504318 7>,
-			 <&reset_controller1504318 43>,
-			 <&reset_controller119500>;
-		reset-names = "swinit", "bridge", "rescal";
-		brcm,enable-l1ss;
-		xen,path = "/axi/pcie@110000";
+		resets = <&reset_controller119500>, <&reset_controller1504318 43>;
+		reset-names = "rescal", "bridge";
+		brcm,clkreq-mode = "safe";
+		brcm,fifo-qos-map = <0x3030303>;
+		xen,path = "/axi/pcie@1000110000";
 		xen,force-assign-without-iommu;
 		xen,reg = <0x10 0x110000 0x0 0xA000 0x10 0x110000>,
 			  <0x1b 0x00 0x0 0x600000 0x1b 0x00>;
