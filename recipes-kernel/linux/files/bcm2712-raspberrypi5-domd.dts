@@ -37,19 +37,15 @@
 		};
 
 		mip0: msi-controller@1000130000 {
-			compatible = "brcm,bcm2712-mip-intc";
-			reg = <0x10 0x00130000 0x0 0xc0>;
-			interrupt-parent = <&gic>;
+			compatible = "brcm,bcm2712-mip";
+			reg = <0x10 0x130000 0x00 0xc0 0xff 0xfffff000 0x00 0x1000>;
 			msi-controller;
-			interrupt-controller;
-			#interrupt-cells = <2>;
-			brcm,msi-base-spi = <128>;
-			brcm,msi-num-spis = <64>;
-			brcm,msi-offset = <0>;
-			brcm,msi-pci-addr = <0xff 0xfffff000>;
-			xen,path = "/axi/msi-controller@130000";
+			msi-ranges = <&gic 0x0 0x80 0x01 0x40>;
+			brcm,msi-offset = <0x00>;
+			xen,path = "/axi/msi-controller@1000130000";
 			xen,force-assign-without-iommu;
-			xen,reg = <0x10 0x00130000 0x0 0x1000 0x10 0x00130000>;
+			xen,reg = <0x10 0x00130000 0x0 0x1000 0x10 0x00130000
+				   0xff 0xfffff000 0x00 0x1000 0xff 0xfffff000>;
 		};
 
 		pciex: pcie@1000120000 {
@@ -59,11 +55,12 @@
 			#interrupt-cells = <0x1>;
 			reg = <0x10 0x120000 0x0 0x9310>;
 			aspm-no-l0s;
-			brcm,vdm-qos-map = <0xbbaa9888>;
-			brcm,enable-mps-rcb;
-			brcm,enable-l1ss;
+			brcm,vdm-qos-map = <0x8080809 0xa0a0b0b>;
+			num-lanes = <0x04>;
+			linux,pci-domain = <2>;
 			dma-ranges = <0x2000000 0x0 0x0 0x1f 0x0 0x0 0x400000
-				      0x43000000 0x10 0x0 0x0 0x0 0x10 0x0>;
+				      0x43000000 0x10 0x0 0x0 0x0 0x10 0x0
+				      0x3000000 0xff 0xfffff000 0x10 0x130000 0x00 0x1000>;
 			ranges = <0x2000000 0x0 0x0 0x1f 0x0 0x0 0xfffffffc
 				  0x43000000 0x4 0x0 0x1c 0x0 0x3 0x0>;
 			interrupt-parent = <&gic>;
@@ -76,13 +73,12 @@
 					 0x00 0x00 0x00 0x02 &gic 0x00 0xe6 0x04
 					 0x00 0x00 0x00 0x03 &gic 0x00 0xe7 0x04
 					 0x00 0x00 0x00 0x04 &gic 0x00 0xe8 0x04>;
-			reset-names = "swinit", "bridge", "rescal";
-			resets = <&reset_controller1504318 0x20>,
-				 <&reset_controller1504318 0x2c>,
-				 <&reset_controller119500>;
+			reset-names = "rescal", "bridge";
+			resets = <&reset_controller119500>,
+				 <&reset_controller1504318 0x2c>;
 			max-link-speed = <0x2>;
 			device_type = "pci";
-			xen,path = "/axi/pcie@120000";
+			xen,path = "/axi/pcie@1000120000";
 			xen,force-assign-without-iommu;
 			xen,reg = <0x10 0x120000 0x0 0xA000 0x10 0x120000
 				   0x1f 0x00 0x0 0x600000 0x1f 0x00>;
@@ -117,7 +113,7 @@
 					phy-mode = "rgmii-id";
 					clock-names = "pclk", "hclk", "tsu_clk";
 					clocks = <&macb_pclk>, <&macb_hclk>, <&clocks18000 0x1d>;
-					xen,path = "/axi/pcie@120000/rp1/ethernet@100000";
+					xen,path = "/axi/pcie@1000120000/rp1/ethernet@100000";
 					xen,force-assign-without-iommu;
 					xen,reg = <0xc0 0x40100000 0x0 0x4000 0xc0 0x40100000>;
 					status = "okay";
@@ -151,7 +147,7 @@
 							  "FAN_PWM", "CD1_IO0_MICCLK", "2712_WAKE",
 							  "CD1_IO1_MICDAT1", "EN_MAX_USB_CUR",
 							  "-", "-", "-", "-";
-					xen,path = "/axi/pcie@120000/rp1/gpio@d0000";
+					xen,path = "/axi/pcie@1000120000/rp1/gpio@d0000";
 					xen,force-assign-without-iommu;
 					xen,reg = <0xc0 0x400d0000 0x0 0xc000 0xc0 0x400d0000
 						   0xc0 0x400e0000 0x0 0xc000 0xc0 0x400e0000
@@ -169,7 +165,7 @@
 					reg = <0xc0 0x40018000 0x0 0x10038>;
 					clocks = <&clk_xosc>;
 					assigned-clock-rates = <0x3b9aca00 0x5b8d8000 0xbebc200
-								0x7735940 0x3a98000 0xb71b000
+								0x7735940 0x3a98000 0x927c000
 								0xbebc200 0x5f5e100 0x2faf080
 								0xf4240 0xbebc200 0x2faf080>;
 					assigned-clocks = <&clocks18000 0x0>, <&clocks18000 0x1>,
@@ -178,7 +174,7 @@
 							  <&clocks18000 0xc>, <&clocks18000 0x6>,
 							  <&clocks18000 0xd>, <&clocks18000 0x1f>,
 							  <&clocks18000 0x20>, <&clocks18000 0x1d>;
-					xen,path = "/axi/pcie@120000/rp1/clocks@18000";
+					xen,path = "/axi/pcie@1000120000/rp1/clocks@18000";
 					xen,force-assign-without-iommu;
 					xen,reg = <0xc0 0x40018000 0x0 0x11000 0xc0 0x40018000>;
 				};
@@ -189,7 +185,7 @@
 			compatible = "brcm,brcmstb-reset";
 			#reset-cells = <0x1>;
 			reg = <0x10 0x1504318 0x0 0x30>;
-			xen,path = "/axi/reset-controller@1504318";
+			xen,path = "/soc@107c000000/reset-controller@1504318";
 			xen,force-assign-without-iommu;
 			xen,reg = <0x10 0x1504000 0x0 0x1000 0x10 0x1504000>;
 		};
@@ -198,7 +194,7 @@
 			compatible = "brcm,bcm7216-pcie-sata-rescal";
 			#reset-cells = <0x0>;
 			reg = <0x10 0x119500 0x0 0x10>;
-			xen,path = "/axi/reset-controller@119500";
+			xen,path = "/soc@107c000000/reset-controller@119500";
 			xen,force-assign-without-iommu;
 			xen,reg = <0x10 0x119000 0x0 0x1000 0x10 0x119000>;
 		};

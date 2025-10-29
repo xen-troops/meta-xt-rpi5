@@ -14,6 +14,7 @@
 		usb3-lpm-capable;
 		snps,axi-pipe-limit = [08];
 		snps,dis_rxdet_inp3_quirk;
+		snps,enhanced-nak-fs-quirk;
 		snps,parkmode-disable-ss-quirk;
 		snps,parkmode-disable-hs-quirk;
 		snps,parkmode-disable-fsls-quirk;
@@ -30,6 +31,7 @@
 		usb3-lpm-capable;
 		snps,axi-pipe-limit = [08];
 		snps,dis_rxdet_inp3_quirk;
+		snps,enhanced-nak-fs-quirk;
 		snps,parkmode-disable-ss-quirk;
 		snps,parkmode-disable-hs-quirk;
 		snps,parkmode-disable-fsls-quirk;
