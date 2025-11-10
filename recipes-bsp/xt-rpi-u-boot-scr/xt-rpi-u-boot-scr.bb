@@ -37,7 +37,7 @@ XENPOLICY_IMAGE ?= "xenpolicy"
 XENPOLICY_IMG_ADDR ?= "0x2300000"
 UBOOT_BOOT_SCRIPT ?= "boot.scr"
 UBOOT_BOOT_SCRIPT_SOURCE ?= "boot.cmd"
-XEN_BOOTARGS ?= "console=dtuart dtuart=\/soc\/serial@7d001000 dom0_mem=128M dom0_max_vcpus=1 xsm=flask flask=permissive"
+XEN_BOOTARGS ?= "console=dtuart dtuart=\/soc@107c000000\/serial@7d001000 dom0_mem=128M dom0_max_vcpus=1 xsm=flask flask=permissive"
 DOM0_BOOTARGS ?= "console=hvc0 earlycon=xen earlyprintk=xen clk_ignore_unused root=\/dev\/ram0"
 DOMD_BOOTARGS ?= "console=ttyAMA0 earlycon=xen earlyprintk=xen clk_ignore_unused root=\/dev\/mmcblk0p2 rootfstype=ext4 rootwait"
 
