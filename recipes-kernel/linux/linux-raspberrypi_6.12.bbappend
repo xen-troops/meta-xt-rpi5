@@ -7,6 +7,8 @@ USB_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-usb"
 MMC_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-mmc"
 PCIE1_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-pcie1"
 CAN_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-can-${DOMD_CAN_TYPE}"
+HDMI_DT_NAME = "${RPI_SOC_FAMILY}-${MACHINE}-hdmi"
+HDMI_PASSTHROUGH_NAME = "hdmi-passthrough"
 
 
 RPI_KERNEL_DEVICETREE:append = " \
@@ -21,6 +23,12 @@ RPI_KERNEL_DEVICETREE:append = " \
 "
 RPI_KERNEL_DEVICETREE:append = " \
     ${@bb.utils.contains('MACHINE_FEATURES', 'domd_can', 'broadcom/${CAN_DT_NAME}.dtbo', '', d)} \
+"
+
+RPI_KERNEL_DEVICETREE:append = " \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'domd_hdmi', \
+                          ' broadcom/${HDMI_DT_NAME}.dtbo \
+                            broadcom/${HDMI_PASSTHROUGH_NAME}.dtbo ', '', d)} \
 "
 
 KERNEL_IMAGETYPES:append = " Image.gz"
@@ -41,6 +49,11 @@ SRC_URI:append = " \
 SRC_URI:append = " \
     ${@bb.utils.contains('MACHINE_FEATURES', 'domd_can', \
     ' file://${CAN_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom', '', d)}"
+
+SRC_URI:append = " \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'domd_hdmi', \
+    ' file://${HDMI_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
+      file://${HDMI_PASSTHROUGH_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom ', '', d)}"
 
 SRC_URI:append = "${@bb.utils.contains('MACHINE_FEATURES', 'scmi', ' file://scmi-config.cfg', '', d)}"
 

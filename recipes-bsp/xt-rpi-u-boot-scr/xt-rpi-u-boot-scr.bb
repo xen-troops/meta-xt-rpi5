@@ -17,6 +17,7 @@ SRC_URI = " \
 MMC_PASSTHROUGH_DTBO = "mmc-passthrough.dtbo"
 USB_PASSTHROUGH_DTBO = "usb-passthrough.dtbo"
 PCIE1_PASSTHROUGH_DTBO = "pcie1-passthrough.dtbo"
+HDMI_PASSTHROUGH_DTBO = "hdmi-passthrough.dtbo"
 
 BOOT_MEDIA ?= "mmc"
 DOM0_IMAGE ?= "zephyr.bin"
@@ -45,6 +46,7 @@ XEN_OVERLAYS = "${XEN_DTBO}"
 XEN_OVERLAYS:append = "${@bb.utils.contains("MACHINE_FEATURES", "domd_mmc", " ${MMC_PASSTHROUGH_DTBO}", "", d)}"
 XEN_OVERLAYS:append = "${@bb.utils.contains("MACHINE_FEATURES", "domd_usb", " ${USB_PASSTHROUGH_DTBO}", "", d)}"
 XEN_OVERLAYS:append = "${@bb.utils.contains("MACHINE_FEATURES", "domd_nvme", " ${PCIE1_PASSTHROUGH_DTBO}", "", d)}"
+XEN_OVERLAYS:append = "${@bb.utils.contains("MACHINE_FEATURES", "domd_hdmi", " ${HDMI_PASSTHROUGH_DTBO}", "", d)}"
 
 do_compile() {
     cat ${WORKDIR}/boot.cmd.xen.1.in > ${WORKDIR}/${TEMPLATE_FILE}
