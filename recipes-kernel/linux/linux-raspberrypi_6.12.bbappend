@@ -20,12 +20,7 @@ RPI_KERNEL_DEVICETREE:append = " \
     broadcom/mmc-passthrough.dtbo \
     broadcom/usb-passthrough.dtbo \
     broadcom/pcie1-passthrough.dtbo \
-"
-RPI_KERNEL_DEVICETREE:append = " \
     ${@bb.utils.contains('MACHINE_FEATURES', 'domd_can', 'broadcom/${CAN_DT_NAME}.dtbo', '', d)} \
-"
-
-RPI_KERNEL_DEVICETREE:append = " \
     ${@bb.utils.contains('MACHINE_FEATURES', 'domd_hdmi', \
                           ' broadcom/${HDMI_DT_NAME}.dtbo \
                             broadcom/${HDMI_PASSTHROUGH_NAME}.dtbo ', '', d)} \
@@ -43,18 +38,14 @@ SRC_URI:append = " \
     file://mmc-passthrough.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://usb-passthrough.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
     file://pcie1-passthrough.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
-    file://0001-drivers-mmc-host-sdhci-brcmstb-fix-no-pinctrl-case.patch \
-"
-
-SRC_URI:append = " \
     ${@bb.utils.contains('MACHINE_FEATURES', 'domd_can', \
-    ' file://${CAN_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom', '', d)}"
-
-SRC_URI:append = " \
+    ' file://${CAN_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom', '', d)} \
     ${@bb.utils.contains('MACHINE_FEATURES', 'domd_hdmi', \
     ' file://${HDMI_DT_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom \
-      file://${HDMI_PASSTHROUGH_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom ', '', d)}"
+      file://${HDMI_PASSTHROUGH_NAME}.dtso;subdir=git/arch/${ARCH}/boot/dts/broadcom ', '', d)} \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'scmi', ' file://scmi-config.cfg', '', d)} \
+    # Patches
+    file://0001-drivers-mmc-host-sdhci-brcmstb-fix-no-pinctrl-case.patch \
+    file://0001-dt-Add-the-range-for-axi-to-fix-the-mipX-ranges-issu.patch \
+"
 
-SRC_URI:append = "${@bb.utils.contains('MACHINE_FEATURES', 'scmi', ' file://scmi-config.cfg', '', d)}"
-
-SRC_URI:append = " file://0001-dt-Add-the-range-for-axi-to-fix-the-mipX-ranges-issu.patch"
